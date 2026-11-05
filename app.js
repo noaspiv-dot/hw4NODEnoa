@@ -138,3 +138,43 @@ app.delete('/books/:code', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+// קבלת כל הספרים עם תמיכה ב-Pagination וחיפוש לפי שם
+app.get('/books', (req, res) => {
+    let result = [...books];
+
+    // 1. חיפוש לפי שם ספר (Search by name)
+    const { name, limit, page } = req.query;
+    if (name) {
+        result = result.filter(b => b.name.toLowerCase().includes(name.toLowerCase()));
+    }
+
+    // 2. הגבלת כמות ועמודים (Pagination)
+    const parsedLimit = parseInt(limit) || result.length; // ברירת מחדל: כל הספרים
+    const parsedPage = parseInt(page) || 1;               // ברירת מחדל: עמוד 1
+
+    const startIndex = (parsedPage - 1) * parsedLimit;
+    const endIndex = startIndex + parsedLimit;
+
+    const paginatedResult = result.slice(startIndex, endIndex);
+
+    res.status(200).json({
+        totalBooks: result.length,
+        page: parsedPage,
+        limit: parsedLimit,
+        data: paginatedResult
+    });
+});
+const express = require('express');
+const app = express();
+const PORT = 5000;
+
+const apiRoutes = require('./routes/index.route');
+
+app.use(express.json());
+
+// קישור הראוטר הראשי תחת /api
+app.use('/api', apiRoutes);
+
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
